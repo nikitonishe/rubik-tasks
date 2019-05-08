@@ -1,0 +1,12 @@
+{
+  "name": "rubik-taskExecutor",
+  "version": "1.0.0",
+  "description": "Task executor for Rubik",
+  "main": "TaskExecutor.js",
+  "license": "MIT",
+  "devDependencies": {
+    "babel-eslint": "^10.0.1",
+    "eslint": "^5.16.0",
+    "rubik-main": "^2.1.1"
+  }
+}
