@@ -7,7 +7,7 @@ const lodash = require('lodash');
  * Осуществляет выполнение заданий с определенной периодичностью или в определенное время суток
  * @extends Rubik
  */
-class TaskExecutor extends Rubik.Kubik {
+class Tasks extends Rubik.Kubik {
   /**
    * Устанавливает зависимости и нициализирует tasks и volumes
    * @param {Array|String} volumes Путь или массив путей до папки с заданиями
@@ -100,4 +100,4 @@ class TaskExecutor extends Rubik.Kubik {
   }
 }
 
-module.exports = TaskExecutor;
+module.exports = Tasks;

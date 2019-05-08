@@ -1,12 +1,59 @@
 {
-  "name": "rubik-taskExecutor",
+  "name": "rubik-tasks",
   "version": "1.0.0",
   "description": "Task executor for Rubik",
-  "main": "TaskExecutor.js",
+  "main": "Tasks.js",
+  "repository": "https://github.com/nikitonishe/rubik-tasks",
   "license": "MIT",
+  "private": false,
+  "keywords": [
+    "rubik",
+    "kubik"
+  ],
   "devDependencies": {
     "babel-eslint": "^10.0.1",
     "eslint": "^5.16.0",
     "rubik-main": "^2.1.1"
+  },
+  "perDependencies": {
+    "rubik-main": "^1.5.1"
+  }
+}
+
+
+{
+  "name": "rubik-mail",
+  "version": "1.1.0",
+  "description": "Simple mailer for the Rubik",
+  "main": "Mail.js",
+  "repository": "https://github.com/ya-kostik/rubik-mail",
+  "author": "Constantin Tsukanov <c@indotech.ru>",
+  "license": "Apache-2.0",
+  "private": false,
+  "scripts": {
+    "test": "jest --verbose",
+    "watch": "jest --watch",
+    "lint": "./node_modules/eslint/bin/eslint.js ./"
+  },
+  "keywords": [
+    "smtp",
+    "rubik",
+    "kubik",
+    "mail",
+    "mailer"
+  ],
+  "devDependencies": {
+    "babel-eslint": "^8.2.3",
+    "eslint": "^4.19.1",
+    "jest": "^23.1.0",
+    "nodemailer": "^4.6.7",
+    "rubik-main": "^1.5.1"
+  },
+  "perDependencies": {
+    "rubik-main": "^1.5.1"
+  },
+  "dependencies": {
+    "lodash": "^4.17.10",
+    "nodemailer": "^4.6.7"
   }
 }
