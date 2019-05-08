@@ -1,5 +1,5 @@
 const Rubik = require('rubik-main');
-const delay = require('./utils/delay');
+const delay = require('./services/delay');
 const moment = require('moment');
 const lodash = require('lodash');
 
