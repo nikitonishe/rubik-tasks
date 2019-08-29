@@ -4,6 +4,7 @@ const isFunction = require('lodash/isFunction');
 const isString = require('lodash/isString');
 
 const getTimeSeconds = require('../lib/getTimeSeconds');
+const delay = require('../lib/delay');
 
 const TaskError = require('../errors/TaskError');
 
@@ -65,7 +66,7 @@ class Task {
     this.parent = parent;
 
     // Проверяем время и период на корректность
-    if (!(time || time === 0 || period || period === 0)) {
+    if (!(this.isTime(time) || this.isPeriod(period))) {
       throw new TaskError('Time and period of task are not defined or invalid');
     }
 
@@ -92,8 +93,8 @@ class Task {
 
     this.jobs = jobs;
 
-    this.time = time ? time : (time === 0 ? 0 : null);
-    this.period = period ? period : (period === 0 ? 0 : null);
+    this.time = this.isTime(time) ? time : null;
+    this.period = this.isPeriod(period) ? period : null;
 
     this.arguments = Array.isArray(args) ? args : [];
 
@@ -106,6 +107,14 @@ class Task {
     this.isStop = false;
 
     this.run = this.run.bind(this);
+  }
+
+  isTime(time = this.time) {
+    return time || time === 0;
+  }
+
+  isPeriod(period = this.period) {
+    return period || period === 0;
   }
 
   /**
@@ -136,6 +145,12 @@ class Task {
     this.inProcess = null;
 
     if (this.once) return;
+
+    // Если задача построена на времени, то ждем одну секунду
+    if (this.isTime()) {
+      await delay(1000);
+    }
+
     this.start();
   }
 
@@ -144,7 +159,7 @@ class Task {
    */
   start() {
     if (this.isStop) return;
-    const secondsTo = this.time || this.time === 0 ? this.getSecondsTo(this.time) : this.period;
+    const secondsTo = this.isTime() ? this.getSecondsTo(this.time) : this.period;
     this.parent.log.info(`${secondsTo} seconds before ${this.name || 'nameless task'}`);
     this.timeout = setTimeout(this.run, secondsTo * 1000);
   }

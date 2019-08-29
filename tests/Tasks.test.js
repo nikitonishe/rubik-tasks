@@ -6,7 +6,7 @@ const { Kubiks: { Config, Log } } = require('rubik-main');
 const Tasks = require('../classes/Tasks');
 const Task = require('../classes/Task');
 
-const delay = require('./lib/delay');
+const delay = require('../lib/delay');
 
 const COUNT_OF_TEST_TASKS = 4;
 
