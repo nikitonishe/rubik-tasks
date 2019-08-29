@@ -1,14 +1,8 @@
 const path = require('path');
 const Rubik = require('rubik-main');
-const moment = require('moment-timezone');
 const isString = require('lodash/isString');
-const isFunction = require('lodash/isFunction');
 const get = require('lodash/get');
-const nanoid = require('nanoid');
-
-const delay = require('./lib/delay');
-
-const ALWAYS = true;
+const Task = require('./Task');
 
 /**
  * Выполненяет задания с определенной периодичностью или в определенное время суток
@@ -16,100 +10,67 @@ const ALWAYS = true;
  * @prop {String} name имя кубика, по умолчанию tasks
  * @prop {Array} tasks задания, которые нужно выполнять
  * @prop {Array} volumes пути до директорий с заданиями
+ * @prop {Array} tasksBuffer буфер задач, сюда добавляются задачи пока кубик не будет поднят
  * @param {Array|String} volumes Путь или массив путей до директории с заданиями
  */
 class Tasks extends Rubik.Kubik {
   constructor (volumes) {
     super();
-    this.tasks = [];
+    this.tasks = new Map();
     this.volumes = [];
 
-    this.timers = {};
+    this.tasksBuffer = [];
 
     if (Array.isArray(volumes)) {
       this.volumes = volumes;
     } else if (isString(volumes)) {
       this.volumes.push(volumes);
     }
+
+    this.isUpped = false;
   }
 
   /**
-   * Выполнить функцию с аргументами
-   * @param  {Function|Array} job функция, если передать массив, то выполнит задачи последовательно
-   * @param  {Array}  args дополнительные аргументы для задач
+   * Запустить задачу на выполнение
+   * @param  {Task} task задача
+   * @return {Task} task
+   */
+  start(task) {
+    task.start();
+    return task;
+  }
+
+  /**
+   * Остановить задачу по id
+   * @param  {String} id идентификатор задачи
+   * @return {Promise<Task>}
+   */
+  async stop(id) {
+    const task = this.tasks.get(id + '');
+    if (!task) return;
+    await task.stop();
+    return task;
+  }
+
+  /**
+   * Остановить все задачи
    * @return {Promise}
    */
-  async process(job, args = []) {
-    if (isFunction(job)) {
-      return job(...args, this, this.app);
-    }
-
-    if (Array.isArray(job)) {
-      const jobs = job;
-      for (const job of jobs) {
-        await this.process(job, args);
-      }
-    }
+  async stopAll() {
+    const promisses = [];
+    this.tasks.forEach((task) => promisses.push(task.stop()));
+    return Promise.all(promisses);
   }
 
   /**
-   * Запустить таск на выполнение
-   * @param  {Object}  task
-   * @return {Promise}
+   * Принять ошибку задачи
+   * @param  {Error} err   ошибка
+   * @param  {Task}  task  задача
    */
-  async start(task) {
-    if (!(Array.isArray(task.jobs) || isFunction(task.jobs))) {
-      return this.log.warn(
-        `Task ${task.name || 'without name'} doesn't have valid jobs`
-      );
-    }
-
-
-    while (ALWAYS) {
-      try {
-        let remainingTime;
-        // Получаем время задачи в секундах
-        if (task.time) remainingTime = this.getRemainingTime(task.time);
-        // Если у задачи нет времени, но есть период, то запускаем его на выполнение
-        else if (task.period) remainingTime = task.period;
-        else {
-          return this.log.warn(
-            `Task ${task.name || 'without name'} doesn't have time or period value`
-          );
-        }
-
-        this.log.info(`${remainingTime} before ${task.name}`);
-        // Ожидаем до того момента, когда можно будет начать выполнять задачи
-        await delay(remainingTime * 1000);
-
-        // Получаем аргументы задачи
-        const args = Array.isArray(task.arguments) ? task.arguments : [];
-
-        await this.process(task.jobs, args);
-
-      } catch (err) {
-        this.log.error(err);
-      }
-      await delay(1000);
-      if (task.oneTime) break;
-    }
+  async error(err, task) {
+    this.log.error(err, `In task ${task.name || 'nameless task'}`);
+    await this.processHooksAsync('task-error', err, task);
   }
-
-  /**
-   * Использовать расширение
-   * @param  {Mixed} extension расширение
-   */
-  use(extension) {
-    if (Array.isArray(extension.volumes)) {
-      for (const volume of extension.volumes) {
-        this.volumes.push(volume);
-      }
-      return;
-    }
-    super.use(extension);
-  }
-
-
 
   /**
    * Прочитать задачи из разделов
@@ -129,11 +90,33 @@ class Tasks extends Rubik.Kubik {
    * А также подтянуть настройки для нее, если они есть
    * @param {Object} task задача
    */
-  addTask (task) {
+  add(task) {
+    // Если приложение не поднято, сохраняем задачи в буфере, пока не получим конфигурацию
+    if (!this.isUpped) {
+      this.tasksBuffer.push(task);
+      return null;
+    }
     const config = this.config.get(this.name);
-    const settings = get(config, `${task.name}.settings`);
-    if (settings) Object.assign(task, settings);
-    this.tasks.push(task);
+    const options = task.name ? get(config, `tasks.${task.name}`) : null;
+    if (options) Object.assign(task, options);
+
+    task = new Task(task, this, config.timezone);
+    this.tasks.set(task.id, task);
+    return task;
+  }
+
+  /**
+   * Использовать расширение
+   * @param  {Mixed} extension расширение
+   */
+  use(extension) {
+    if (Array.isArray(extension.volumes)) {
+      for (const volume of extension.volumes) {
+        this.volumes.push(volume);
+      }
+      return;
+    }
+    super.use(extension);
   }
 
   /**
@@ -143,7 +126,13 @@ class Tasks extends Rubik.Kubik {
    */
   async up(dependencies) {
     Object.assign(this, dependencies);
-    await this.processHooks('before');
+
+    await this.processHooksAsync('before');
+    this.isUpped = true;
+
+    this.tasksBuffer.forEach(this.add, this);
+    this.tasksBuffer = [];
+
     await this.readTasks();
   }
 
@@ -152,18 +141,22 @@ class Tasks extends Rubik.Kubik {
    */
   async after() {
     this.tasks.forEach(this.start, this);
-    await this.processHooks('after');
+    await this.processHooksAsync('after');
   }
 
   /**
-   * Выключить кубик
+   * Выключить кубик и очистить таски
    * @return {Promise}
    */
   async down() {
-
+    await this.stopAll();
+    this.tasks = new Map();
+    this.isUpped = false;
   }
 }
 
 Tasks.prototype.name = 'tasks';
 Tasks.prototype.dependencies = Object.freeze(['log', 'config']);
+
+Tasks.prototype.addTask = Tasks.prototype.add;
 module.exports = Tasks;

@@ -1,5 +1,5 @@
 module.exports = {
 	name: 'Тестовая задача 2',
 	jobs: [function() {}],
-	period: 100
+	period: 1
 };
