@@ -60,6 +60,12 @@ Now when the application ups, the task ”My first“ task will be queued for ex
 - `arguments` is an array of additional variables for task's functions, they are they are placed at the beginning of the function arguments;
 - `once` is a flag to start task once.
 
+You can use placeholders for a `period` option:
+- `1w` — a week;
+- `1d` — a day;
+- `1h` — a hour;
+- `1m` - a minute.
+
 ## Manualy add tasks
 Just use `add` method:
 ```js

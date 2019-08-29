@@ -1,8 +1,8 @@
 const nanoid = require('nanoid');
 const moment = require('moment-timezone');
 const isFunction = require('lodash/isFunction');
-const isString = require('lodash/isString');
 
+const getPeriodSeconds = require('../lib/getPeriodSeconds');
 const getTimeSeconds = require('../lib/getTimeSeconds');
 const delay = require('../lib/delay');
 
@@ -56,7 +56,7 @@ class Task {
     id, name, description, time, period, jobs, func, arguments: args, once, oneTime
   }, parent, timezone) {
     if (!id) id = nanoid();
-    period = isString(period) ? +period : period;
+    period = getPeriodSeconds(period);
     time = getTimeSeconds(time);
 
     this.id = id + '';
