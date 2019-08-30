@@ -58,7 +58,8 @@ Now when the application ups, the task ”My first“ task will be queued for ex
 - `period` is the frequency in seconds when the task will be executed;
 - `jobs` is an array of functions, they are called one after another when the task is executed;
 - `arguments` is an array of additional variables for task's functions, they are they are placed at the beginning of the function arguments;
-- `once` is a flag to start task once.
+- `once` is a flag to start task once;
+- `context` is a context of funtions inside jobs.
 
 You can use placeholders for a `period` option:
 - `1w` — a week;

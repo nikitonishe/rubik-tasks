@@ -90,12 +90,20 @@ describe('Кубик Tasks', () => {
     const date = moment().tz(timezone);
     date.add(2, 'second');
 
+    // Внутри колбэка должен быть этот контекст
+    const context = {};
+
     const time = date.format('HH:mm:ss');
-    const mockCb = jest.fn();
+    const mockCb = jest.fn(function (kubikIn, appIn) {
+      expect(kubikIn).toBe(kubik);
+      expect(appIn).toBe(app);
+      expect(this).toBe(context);
+    });
 
     const task = kubik.addTask({
       name: 'Demo time task',
       description: 'Just another task',
+      context,
       time,
       jobs: [mockCb]
     });

@@ -27,5 +27,13 @@ describe('Функция getPeriodSeconds', () => {
 
   test('Не трогает null', () => {
     expect(getPeriodSeconds(null)).toBe(null);
-  })
+  });
+
+  test('Умеет распознавать числа в плэйсхолдерах', () => {
+    expect(getPeriodSeconds('2w')).toBe(2 * WEEK);
+    expect(getPeriodSeconds('3d')).toBe(3 * DAY);
+    expect(getPeriodSeconds('4h')).toBe(4 * HOUR);
+    expect(getPeriodSeconds('5m')).toBe(5 * MIN);
+    expect(getPeriodSeconds('6s')).toBe(6);
+  });
 });

@@ -33,6 +33,7 @@ const invalidateJob = () => {
  * @prop {Array}   arguments аргументы для функций задачи
  * @prop {Boolean} once      выполнить задачу один раз
  * @prop {Boolean} oneTime   тоже что и once, оставили для обратной совместимости
+ * @prop {Mixed}   [context]   контекст, с которым будут вызваны функции из массива jobs
  */
 
 /**
@@ -47,13 +48,14 @@ const invalidateJob = () => {
  * @prop {Number}  period через сколько секунд от запуска нужно выполнить задачу
  * @prop {Array}   arguments аргументы для функций задачи
  * @prop {Boolean} once      выполнить задачу один раз
+ * @prop {Mixed}   [context=this]   контекст, с которым будут вызваны функции из массива jobs
  * @prop {Mixed}   timeout   идентификатор таймаута задачи
  * @prop {Boolean} isStop    флаг показывает, ждет ли сейчас задача выключения
  * @prop {Promise} inProcess текущий промис выполнения, если что-то выполняется. Нужен для правной остановки кубика
  */
 class Task {
   constructor({
-    id, name, description, time, period, jobs, func, arguments: args, once, oneTime
+    id, name, description, time, period, jobs, func, arguments: args, once, oneTime, context
   }, parent, timezone) {
     if (!id) id = nanoid();
     period = getPeriodSeconds(period);
@@ -99,6 +101,8 @@ class Task {
     this.arguments = Array.isArray(args) ? args : [];
 
     this.once = !!(once || oneTime);
+    this.context = context === undefined ? this : context;
+
     this.timezone = timezone || DEFAULT_TIMEZONE;
 
     this.timeout = null;
@@ -125,7 +129,7 @@ class Task {
   async process() {
     try {
       for (const job of this.jobs) {
-        await job(...this.arguments, this.parent, this.parent.app, this);
+        await job.call(this.context, ...this.arguments, this.parent, this.parent.app, this);
       }
     } catch (err) {
       this.parent.error(err, this);
