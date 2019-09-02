@@ -80,7 +80,7 @@ class Tasks extends Rubik.Kubik {
     for (const volume of this.volumes) {
       await Rubik.helpers.readdir(volume, (file) => {
         const task = require(path.join(volume, file));
-        this.addTask(task);
+        this.add(task);
       });
     }
   }
