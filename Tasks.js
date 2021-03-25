@@ -14,7 +14,7 @@ class Tasks extends Rubik.Kubik {
    */
   constructor (volumes) {
     super();
-    this.name = 'taskExecutor';
+    this.name = 'Tasks';
     this.dependencies = ['log', 'config'];
     this.tasks = [];
     this.volumes = [];
@@ -40,6 +40,7 @@ class Tasks extends Rubik.Kubik {
       try {
         let remainingTime;
 
+        if (task.off) return;
         if (task.time) remainingTime = this.getRemainingTime(task.time);
         if (task.period) remainingTime = task.period;
 
@@ -68,11 +69,15 @@ class Tasks extends Rubik.Kubik {
   }
 
   getRemainingTime(time) {
-    if (!time || !time.split) time = '0:0';
-    time = time.split(':');
-    const desiredSeconds = (+time[0] || 0) * 3600 + (+time[1] || 0) * 60 + (+time[2] || 0);
-    const date = moment.utc().add(3, 'h');
-    const currentSeconds = date.hours() * 3600 + date.minutes() * 60 + date.seconds();
+    if (!time || !time.split) time = '0:0'; // Если время не было передано или его нельзя сплитить, берем по умолчанию значение '0:0'
+    time = time.split(':'); // Получаем массив, в котором нулевой элемент — это часы, первый — минуты, третий — секунды (если они есть)
+    const desiredSeconds = (+time[0] || 0) * 3600 + (+time[1] || 0) * 60 + (+time[2] || 0); // Вычисляем время запуска задания в секундах от начала суток
+    const date = moment.utc().add(3, 'h'); // Получаем текущую дату во временной зоне +3
+    const currentSeconds = date.hours() * 3600 + date.minutes() * 60 + date.seconds(); // Вычисляем сколько на данный момент прошло секунд от начала суток
+    // Чтобы узнать сколько секунд нужно подождать до начала задания находим разницу desiredSeconds - currentSeconds
+    // Но может получиться так, что текущее время больше время запуска, и тогда разница получится отрицательной
+    // В таком случае нужно к этой разнице прибавить 24 часа чтобы получить количество секунд до следующего запуска
+    // Но при такой логике если разница все таки положительна мы получаем количество секунд более суток, тогда просто берем остаток от деления на 24 часа
     return (24*3600 + desiredSeconds - currentSeconds) % (24 * 3600);
   }
 
