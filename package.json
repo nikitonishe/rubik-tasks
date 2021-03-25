@@ -1,6 +1,6 @@
 {
   "name": "rubik-tasks",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Task executor for Rubik",
   "main": "classes/Tasks.js",
   "repository": "https://github.com/nikitonishe/rubik-tasks",
