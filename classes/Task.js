@@ -51,11 +51,12 @@ const invalidateJob = () => {
  * @prop {Mixed}   [context=this]   контекст, с которым будут вызваны функции из массива jobs
  * @prop {Mixed}   timeout   идентификатор таймаута задачи
  * @prop {Boolean} isStop    флаг показывает, ждет ли сейчас задача выключения
+ * @prop {Boolean} skip    флаг показывает, что этот таск нужно пропустить
  * @prop {Promise} inProcess текущий промис выполнения, если что-то выполняется. Нужен для правной остановки кубика
  */
 class Task {
   constructor({
-    id, name, description, time, period, jobs, func, arguments: args, once, oneTime, context
+    id, name, description, time, period, jobs, func, arguments: args, once, oneTime, context, skip
   }, parent, timezone) {
     if (!id) id = nanoid();
     period = getPeriodSeconds(period);
@@ -101,6 +102,7 @@ class Task {
     this.arguments = Array.isArray(args) ? args : [];
 
     this.once = !!(once || oneTime);
+    this.skip = !!skip
     this.context = context === undefined ? this : context;
 
     this.timezone = timezone || DEFAULT_TIMEZONE;
@@ -163,6 +165,7 @@ class Task {
    */
   start() {
     if (this.isStop) return;
+    if (this.skip) return;
     const secondsTo = this.isTime() ? this.getSecondsTo(this.time) : this.period;
     this.parent.log.info(`${secondsTo} seconds before ${this.name || 'nameless task'}`);
     this.timeout = setTimeout(this.run, secondsTo * 1000);
