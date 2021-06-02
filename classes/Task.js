@@ -1,4 +1,4 @@
-const nanoid = require('nanoid');
+const { nanoid } = require('nanoid');
 const moment = require('moment-timezone');
 const isFunction = require('lodash/isFunction');
 

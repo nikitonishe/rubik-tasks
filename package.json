@@ -1,31 +1,41 @@
 {
   "name": "rubik-tasks",
-  "version": "2.2.2",
+  "version": "2.3.0",
   "description": "Task executor for Rubik",
   "main": "classes/Tasks.js",
   "repository": "https://github.com/nikitonishe/rubik-tasks",
   "license": "MIT",
   "private": false,
-  "keywords": [
-    "rubik",
-    "kubik"
+  "files": [
+    "classes/",
+    "default/",
+    "errors/",
+    "lib/"
   ],
-  "dependencies": {
-    "lodash": "^4.17.15",
-    "moment-timezone": "^0.5.26",
-    "nanoid": "^2.0.4"
-  },
-  "devDependencies": {
-    "babel-eslint": "^10.0.3",
-    "eslint": "^6.2.2",
-    "jest": "^24.9.0",
-    "rubik-main": "^2.1.2"
-  },
-  "peerDependencies": {
-    "rubik-main": "^2.1.2"
-  },
   "scripts": {
     "test": "jest",
-    "watch": "jest --watch"
+    "watch": "jest --watch",
+    "lint": "eslint ./",
+    "tarball": "tarball=\"$(npm pack .)\"; wc -c \"${tarball}\"; tar tvf \"${tarball}\"; rm \"${tarball}\";"
+  },
+  "keywords": [
+    "rubik",
+    "kubik",
+    "tasks",
+    "jobs",
+    "cron"
+  ],
+  "dependencies": {
+    "lodash": "^4.17.21",
+    "moment-timezone": "^0.5.33",
+    "nanoid": "^3.1.23"
+  },
+  "devDependencies": {
+    "eslint": "^7.27.0",
+    "jest": "^27.0.3",
+    "rubik-main": "^2.2.2"
+  },
+  "peerDependencies": {
+    "rubik-main": "^2.2.2"
   }
 }
